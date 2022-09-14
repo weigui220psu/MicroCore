@@ -30,6 +30,7 @@ def run(protocol: protocol_api.ProtocolContext):
 	
 	for i in range(1, 13):
 		multi20.pick_up_tip()
+		multi20.mix(5, 20) # mix culture before taking out
 		multi20.aspirate(Culture_Volume*9, cultureplate['A'+str(i)]) # pull one extra load dead volume
 		multi20.dispense(Culture_Volume, assayplate1['A'+str(i*2-1)])
 		multi20.dispense(Culture_Volume, assayplate1['A'+str(i*2)])
