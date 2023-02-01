@@ -23,7 +23,7 @@ This protocol describes a screening strategy to screen microbes for growth/metab
 
 # Protocol
 
-*Note: *
+*Note: Before starting work for the day spray all surfaces with 70% ethanol or isopropanol (in anaerobic chamber). Outside of anaerobic chamber, always work by flame or inside biological safety cabinet. Remember all surfaces in the anaerobic chamber are potentially contaminated and extra precaution should be taken during handling.*
 
 ## Preparation of Inoculum
 
