@@ -23,6 +23,8 @@ This protocol describes a screening strategy to screen microbes for growth/metab
 
 # Protocol
 
+*Note: *
+
 ## Preparation of Inoculum
 
 ### Day 1
