@@ -1,0 +1,159 @@
+---
+title: "Micro Screening Core"
+date: '`r format(Sys.time(), "%Y-%m-%d %H:%M")`'
+output: 
+  html_document:
+    code_folding: show
+    theme: spacelab
+    number_sections: true
+    highlight: monochrome
+    fig_width: 11
+    fig_height: 8.5
+    toc: true
+    toc_float: true
+editor_options: 
+  chunk_output_type: console
+---
+
+# Notes
+
+Insert notes/abnormalities here:
+
+HERE HERE HERE HERE
+
+# Set Up
+
+Update this section with file names / important parameters.
+
+Please ensure all files follow the following directory structure:
+
+/data/MicroCore/runs/PROJECTID/DATEOFRUN_DRUG_PLATE/DATEOFRUN_DRUG_PLATE_[LR|PreRun].xlsx
+
+```{r}
+PreOD<- "/data/MicroCore/runs/Mercury_Jan2023/2022Dec30_Mercury_Plate1_Low/2022Dec30_Plate1_MeHg_Low_PreRun.xlsx"
+PlateL<-"/data/MicroCore/runs/Mercury_Jan2023/2022Dec30_Mercury_Plate1_Low/2022Dec30_Plate1_MeHg_Low_L.xlsx"
+PlateR<-"/data/MicroCore/runs/Mercury_Jan2023/2022Dec30_Mercury_Plate1_Low/2022Dec30_Plate1_MeHg_Low_R.xlsx"
+Layout<-"/data/MicroCore/strain_arrays/September2022/StrainCollection_Plates.xlsx"
+PlateNumber<-1
+```
+
+```{r}
+library(tidyverse)
+library(qiime2R)
+library(readxl)
+library(growthcurver)
+theme_set(theme_q2r())
+sessionInfo()
+```
+
+
+# Growth Data Import
+
+## Import layout
+
+```{r}
+platelayout<-
+read_excel(Layout, skip=(PlateNumber-1)*12-(PlateNumber-2), n_max = 8) %>%
+  pivot_longer(!Row, names_to = "Column", values_to = "StrainID") %>%
+  mutate(Column=as.numeric(Column)) %>%
+  mutate(Columns=paste(Column*2-1, Column*2, sep=",")) %>%
+  mutate(Rows=paste(LETTERS[match(Row, LETTERS)*2-1], LETTERS[match(Row, LETTERS)*2], sep=",")) %>%
+  separate_rows(Columns, sep=",") %>%
+  separate_rows(Rows, sep=",") %>%
+  mutate(Well384=paste0(Rows, Columns)) %>%
+  mutate(Plate=PlateNumber) %>%
+  mutate(Well96=paste0(Row, Column)) %>%
+  dplyr::select(Plate, Well384, Well96, StrainID)
+
+platelayout %>%
+  mutate(Row=gsub("[0-9]","", Well96)) %>%
+  mutate(Column=gsub("[A-Z]","", Well96) %>% as.numeric()) %>%
+  mutate(Row=factor(Row, levels=rev(LETTERS))) %>%
+  ggplot(aes(x=Column, y=Row)) +
+  geom_text(aes(label=StrainID), color="black", size=2) +
+  scale_x_continuous(breaks=1:24)
+```
+
+## PreRun ODs
+
+```{r}
+PreRun<-  
+  read_excel(PreOD, skip=9, n_max = 8) %>%
+  pivot_longer(!Abs, names_to = "Column", values_to = "OD") %>%
+  dplyr::rename(Row=Abs) %>%
+  mutate(Well=paste0(Row, Column)) %>%
+  dplyr::select(Well, everything()) %>%
+  mutate(Column=as.numeric(Column))
+
+PreRun %>%
+  left_join(platelayout %>% dplyr::select(Well=Well96, StrainID) %>% distinct()) %>%
+  mutate(Row=factor(Row, levels=rev(LETTERS))) %>%
+  ggplot(aes(x=Column, y=Row, fill=OD)) +
+  geom_tile() +
+  geom_text(aes(label=paste0(StrainID, "\n", OD)), color="white", size=2) +
+  scale_x_continuous(breaks=1:12)
+
+ggsave("PreRun_ODs.pdf", height=7.5, width=10, useDingbats=F)
+
+PreRun %>%
+  left_join(platelayout %>% dplyr::select(Well=Well96, StrainID) %>% distinct()) %>%
+  write_csv("PreRun_ODs.csv")
+  
+interactive_table(PreRun %>% dplyr::select(-Row, Column))
+```
+
+
+## Import Growth Data
+
+```{r}
+growthdata<-
+read_excel(PlateL, skip=9) %>% dplyr::select(-Reading, -`...387`) %>% dplyr::select(Time_h=1, everything()) %>% pivot_longer(!Time_h, names_to = "Well384", values_to = "OD") %>% mutate(Side="L") %>%
+  bind_rows(
+    read_excel(PlateR, skip=9) %>% dplyr::select(-Reading, -`...387`) %>% dplyr::select(Time_h=1, everything()) %>% pivot_longer(!Time_h, names_to = "Well384", values_to = "OD") %>% mutate(Side="R")
+) %>%
+    mutate(Time_h=round(Time_h/60/60,2)) %>%
+  mutate(Well384=gsub("([A-Z])0([0-9])","\\1\\2", Well384)) %>%
+  left_join(platelayout) %>%
+  filter(Time_h!="NA")
+
+baseline<-growthdata %>% filter(Time_h==0) %>% filter(grepl("Blank", StrainID)) %>% pull(OD) %>% median()
+
+growthdata<-growthdata %>% mutate(Drug=if_else(gsub("[0-9]", "", Well384) %in% LETTERS[seq(1,24,2)], "Vehicle","Drug"))
+
+growthdata<-growthdata %>% mutate(ODnorm=round(OD-baseline, 4)) %>% dplyr::select(StrainID, Drug, Plate, Time_h, Well384, Well96, Side, OD, ODnorm)
+
+
+interactive_table(growthdata)
+
+write_csv(growthdata, "Processed_GrowthData.csv")
+
+```
+
+
+# Controls
+
+```{r}
+growthdata %>%
+  filter(StrainID %in% c("JEB00015_IS", "JEB00046_IS")) %>%
+  ggplot(aes(x=Time_h, y=ODnorm, color=Drug, group=paste(Well384, Side), linetype=Side)) +
+  geom_line() +
+  #geom_point(alpha=0.5, shape=16) +
+  facet_wrap(~StrainID)
+ggsave("Growth_Controls.pdf", height=7.5, width=10, useDingbats=F)
+
+```
+
+
+# Data
+
+```{r}
+growthdata %>%
+  mutate(Row=gsub("[0-9]","", Well96) %>% factor(., levels=(LETTERS))) %>%
+  mutate(Column=gsub("[A-Z]","", Well96) %>% as.numeric()) %>%
+  arrange(Row, Column) %>%
+  mutate(StrainID=factor(StrainID, levels=unique(StrainID))) %>%
+  ggplot(aes(x=Time_h, y=ODnorm, color=Drug, group=paste(Plate,Side,Well384, StrainID), linetype=Side)) +
+  geom_line() +
+  facet_wrap(~StrainID, nrow=8)
+ggsave("Growth_PlateLayout.pdf", height=7.5, width=10, useDingbats=F)
+```
