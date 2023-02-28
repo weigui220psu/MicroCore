@@ -34,7 +34,6 @@ This protocol describes a screening strategy to screen microbes for growth/metab
 
 ### Day 2
 - [ ] Remove Deep well strain block from -80˚C freezer and place on freezer block
-- [ ] ?Centrifuge strain block at X G for X minutes?
 - [ ] Transfer strain block into anaerobic chamber
 - [ ] Carefully remove seal avoiding splashing of any condensation that may still be on lid
 - [ ] Carefully remove pin replicator from bag being sure not to touch any surface
@@ -56,7 +55,7 @@ This protocol describes a screening strategy to screen microbes for growth/metab
 
 ### Day 5
 - [ ] Remove the inoculation plate from the incubator and place onto plate vortex
-- [ ] Vortex for X seconds at X rpm (do not exceed this number as it may lead to spillage and/or cross contamination)
+- [ ] Vortex for 60 seconds at 1000 rpm (do not exceed this number as it may lead to spillage and/or cross contamination)
 - [ ] Transfer 96 well plate to plate reader and measure OD600
 - [ ] Save these results to transfer to server
 - [ ] Carefully examine corner wells (sterile controls) and internal sterile wells. If signs of growth: STOP! Also, if majority of strains have not grown: STOP!
@@ -68,7 +67,7 @@ This protocol describes a screening strategy to screen microbes for growth/metab
 - [ ] Load OT2 software and makeGCs.py script
 - [ ] Calibrate all deck positions (especially important for 384 well plates)
 - [ ] Run script
-- [ ] After completion (about X minutes), transfer breathable seals onto both 384 well plates
+- [ ] After completion (about 15 minutes), transfer breathable seals onto both 384 well plates
 - [ ] Carefully wrap exterior edges of plates with tape and transfer to plate readers
 - [ ] Set up both plate readers to run at 37˚C for 48h with OD600 reads every 15 minutes
 - [ ] Discard inoculation plate (unless you want to save it to verify strains after the fact), and tip box (note: tips in the box are contaminated and must be marked/discard to prevent their reuse
