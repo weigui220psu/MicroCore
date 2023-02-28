@@ -34,7 +34,6 @@ This protocol describes a screening strategy to screen microbes for growth/metab
 
 ### Day 2
 - [ ] Remove Deep well strain block from -80˚C freezer and place on freezer block
-- [ ] ?Centrifuge strain block at X G for X minutes?
 - [ ] Transfer strain block into anaerobic chamber
 - [ ] Carefully remove seal avoiding splashing of any condensation that may still be on lid
 - [ ] Carefully remove pin replicator from bag being sure not to touch any surface
